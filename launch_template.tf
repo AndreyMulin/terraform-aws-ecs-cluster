@@ -25,11 +25,16 @@ EOT
 resource "aws_launch_template" "node" {
   name_prefix            = "ecs_node_"
   image_id               = local.ami_id
-  instance_type          = "t3a.small"
-  vpc_security_group_ids = local.sg_ids
+  instance_type          = keys(local.instance_types)[0]
+  vpc_security_group_ids = local.public ? [] : local.sg_ids
   user_data              = data.cloudinit_config.config.rendered
   tags                   = local.tags
   update_default_version = true
+
+  network_interfaces {
+    associate_public_ip_address = local.public
+    security_groups             = local.sg_ids
+  }
 
   iam_instance_profile {
     name = aws_iam_instance_profile.ecs_node.name
